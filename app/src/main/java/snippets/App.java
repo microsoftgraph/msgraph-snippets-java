@@ -1,0 +1,95 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+package snippets;
+
+import java.io.IOException;
+import java.util.InputMismatchException;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Scanner;
+
+import com.microsoft.graph.models.User;
+import com.microsoft.graph.requests.GraphServiceClient;
+
+import okhttp3.Request;
+
+public class App {
+    public static Properties getProperties() {
+        final Properties oAuthProperties = new Properties();
+        try {
+            oAuthProperties.load(App.class.getResourceAsStream("oAuth.properties"));
+        } catch (IOException e) {
+            System.out.println(
+                "Unable to read OAuth configuration. Make sure you have a properly formatted oAuth.properties file. See README for details.");
+            return null;
+        }
+
+        final Properties devProperties = new Properties();
+        try {
+            devProperties.load(App.class.getResourceAsStream("oAuth.dev.properties"));
+        } catch (IOException e) {
+            // File not required
+        }
+
+        final Properties merged = new Properties();
+        merged.putAll(oAuthProperties);
+        // This will overwrite any values that are in the dev file
+        merged.putAll(devProperties);
+
+        return merged;
+    }
+
+    public static void main(String[] args) {
+        final Properties properties = App.getProperties();
+        if (null == properties) {
+            System.out.println("Failed to load properties, exiting...");
+            return;
+        }
+
+        GraphServiceClient<Request> userClient;
+        try {
+            userClient = GraphHelper.getGraphClientForUser(properties,
+                challenge -> System.out.println(challenge.getMessage()));
+        } catch (Exception e) {
+
+            System.out.println("Error initializing Graph for user auth");
+            System.out.println(e.getMessage());
+            return;
+        }
+
+        final User user = userClient.me().buildRequest().get();
+        System.out.println("Hello " + Objects.requireNonNull(user).displayName + "!");
+
+        Scanner input = new Scanner(System.in);
+        int choice = -1;
+
+        while (0 != choice) {
+            System.out.println("Please choose one of the following options:");
+            System.out.println("0. Exit");
+            System.out.println("1. Display access token");
+            System.out.println("2. List my inbox");
+            System.out.println("3. Send mail");
+            System.out.println("4. Make a Graph call");
+
+            try {
+                choice = input.nextInt();
+            } catch (InputMismatchException e) {
+                // Skip non-integer input
+            }
+
+            input.nextLine();
+
+            switch (choice) {
+                 case 0:
+                    // Exit the program
+                    System.out.println("Goodbye...");
+                    break;
+                default:
+                    System.out.println("Invalid choice");
+            }
+        }
+
+        input.close();
+    }
+}
