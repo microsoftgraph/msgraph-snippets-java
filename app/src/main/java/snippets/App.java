@@ -18,16 +18,16 @@ public class App {
     public static Properties getProperties() {
         final Properties oAuthProperties = new Properties();
         try {
-            oAuthProperties.load(App.class.getResourceAsStream("oAuth.properties"));
+            oAuthProperties.load(App.class.getResourceAsStream("app.properties"));
         } catch (IOException e) {
             System.out.println(
-                "Unable to read OAuth configuration. Make sure you have a properly formatted oAuth.properties file. See README for details.");
+                "Unable to read app configuration. Make sure you have a properly formatted app.properties file. See README for details.");
             return null;
         }
 
         final Properties devProperties = new Properties();
         try {
-            devProperties.load(App.class.getResourceAsStream("oAuth.dev.properties"));
+            devProperties.load(App.class.getResourceAsStream("app.dev.properties"));
         } catch (IOException e) {
             // File not required
         }
@@ -61,6 +61,8 @@ public class App {
         final User user = userClient.me().buildRequest().get();
         System.out.println("Hello " + Objects.requireNonNull(user).displayName + "!");
 
+        final String largeFilePath = properties.getProperty("app.largeFilePath");
+
         Scanner input = new Scanner(System.in);
         int choice = -1;
 
@@ -92,7 +94,7 @@ public class App {
                     CreateRequests.runSamples(userClient);
                     break;
                 case 3:
-                    LargeFileUpload.runSamples(userClient);
+                    LargeFileUpload.runSamples(userClient, largeFilePath);
                     break;
                 case 4:
                     Paging.runAllSamples(userClient);

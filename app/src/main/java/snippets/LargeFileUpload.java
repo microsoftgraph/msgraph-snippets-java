@@ -23,9 +23,8 @@ import com.microsoft.graph.tasks.LargeFileUploadTask;
 import okhttp3.Request;
 
 public class LargeFileUpload {
-    public static void runSamples(GraphServiceClient<Request> graphClient)
+    public static void runSamples(GraphServiceClient<Request> graphClient, String filePath)
         throws Exception {
-        final String filePath = "C:/Users/jasonjoh/OneDrive - Microsoft/Pictures/vacation.gif";
         final String itemPath = "Documents/vacation.gif";
 
         uploadFileToOneDrive(graphClient, filePath, itemPath);

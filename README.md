@@ -32,7 +32,7 @@ This repository contains sample snippets for the [Microsoft Graph Java SDK](http
 
 ## Configuring the sample
 
-You can set these values directly in [oAuth.properties](app/src/main/resources/snippets/oAuth.properties), or you can create a copy of **oAuth.properties** named **oAuth.dev.properties** and set the values there.
+You can set these values directly in [app.properties](app/src/main/resources/snippets/app.properties), or you can create a copy of **app.properties** named **app.dev.properties** and set the values there.
 
 1. Set `app.clientId` to the **Application (client) ID** from your app registration.
 1. If you chose **Accounts in this organizational directory only** for **Supported account types**, set `app.tenantId` to your **Directory (tenant) ID**.
