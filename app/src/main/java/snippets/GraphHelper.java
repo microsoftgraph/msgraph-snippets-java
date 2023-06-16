@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.identity.DeviceCodeCredentialBuilder;
 import com.azure.identity.DeviceCodeInfo;
@@ -19,8 +17,8 @@ import com.microsoft.graph.requests.GraphServiceClient;
 import okhttp3.Request;
 
 public class GraphHelper {
-    public static GraphServiceClient<Request> getGraphClientForUser(@Nonnull Properties properties,
-        @Nonnull Consumer<DeviceCodeInfo> challenge) throws Exception {
+    public static GraphServiceClient<Request> getGraphClientForUser(Properties properties,
+        Consumer<DeviceCodeInfo> challenge) throws Exception {
 
         // Get required properties
         final String clientId = properties.getProperty("app.clientId");

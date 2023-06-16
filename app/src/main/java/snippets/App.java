@@ -67,10 +67,10 @@ public class App {
         while (0 != choice) {
             System.out.println("Please choose one of the following options:");
             System.out.println("0. Exit");
-            System.out.println("1. Display access token");
-            System.out.println("2. List my inbox");
-            System.out.println("3. Send mail");
-            System.out.println("4. Make a Graph call");
+            System.out.println("1. Run batch samples");
+            System.out.println("2. Run create request samples");
+            System.out.println("3. Run upload samples");
+            System.out.println("4. Run paging samples");
 
             try {
                 choice = input.nextInt();
@@ -81,12 +81,15 @@ public class App {
             input.nextLine();
 
             switch (choice) {
-                 case 0:
-                    // Exit the program
-                    System.out.println("Goodbye...");
-                    break;
-                default:
-                    System.out.println("Invalid choice");
+            case 0:
+                // Exit the program
+                System.out.println("Goodbye...");
+                break;
+            case 1:
+                BatchRequests.runSamples(userClient);
+                break;
+            default:
+                System.out.println("Invalid choice");
             }
         }
 
