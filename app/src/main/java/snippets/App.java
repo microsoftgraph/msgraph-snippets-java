@@ -79,20 +79,26 @@ public class App {
             }
 
             input.nextLine();
-
-            switch (choice) {
-            case 0:
-                // Exit the program
-                System.out.println("Goodbye...");
-                break;
-            case 1:
-                BatchRequests.runSamples(userClient);
-                break;
-            case 2:
-                CreateRequests.runSamples(userClient);
-                break;
-            default:
-                System.out.println("Invalid choice");
+            try {
+                switch (choice) {
+                case 0:
+                    // Exit the program
+                    System.out.println("Goodbye...");
+                    break;
+                case 1:
+                    BatchRequests.runSamples(userClient);
+                    break;
+                case 2:
+                    CreateRequests.runSamples(userClient);
+                    break;
+                case 3:
+                    LargeFileUpload.runSamples(userClient);
+                    break;
+                default:
+                    System.out.println("Invalid choice");
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
 
