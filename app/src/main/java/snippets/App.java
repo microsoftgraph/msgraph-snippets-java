@@ -88,6 +88,9 @@ public class App {
             case 1:
                 BatchRequests.runSamples(userClient);
                 break;
+            case 2:
+                CreateRequests.runSamples(userClient);
+                break;
             default:
                 System.out.println("Invalid choice");
             }
