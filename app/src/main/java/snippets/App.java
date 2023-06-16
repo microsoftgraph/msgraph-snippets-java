@@ -94,6 +94,9 @@ public class App {
                 case 3:
                     LargeFileUpload.runSamples(userClient);
                     break;
+                case 4:
+                    Paging.runAllSamples(userClient);
+                    break;
                 default:
                     System.out.println("Invalid choice");
                 }
