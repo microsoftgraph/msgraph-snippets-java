@@ -1,6 +1,6 @@
 # Microsoft Graph Java SDK Snippets
 
-[![dotnet build](https://github.com/microsoftgraph/msgraph-snippets-dotnet/actions/workflows/dotnet.yml/badge.svg)](https://github.com/microsoftgraph/msgraph-snippets-dotnet/actions/workflows/dotnet.yml) ![License.](https://img.shields.io/badge/license-MIT-green.svg)
+[![Java CI with Gradle](https://github.com/microsoftgraph/msgraph-snippets-java/actions/workflows/gradle.yml/badge.svg)](https://github.com/microsoftgraph/msgraph-snippets-java/actions/workflows/gradle.yml) ![License.](https://img.shields.io/badge/license-MIT-green.svg)
 
 This repository contains sample snippets for the [Microsoft Graph Java SDK](https://github.com/microsoftgraph/msgraph-sdk-java). These snippets are referenced in the [Microsoft Graph SDK documentation](https://learn.microsoft.com/graph/sdks/sdks-overview).
 
