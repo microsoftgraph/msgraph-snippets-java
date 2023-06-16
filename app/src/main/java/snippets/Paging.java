@@ -19,6 +19,7 @@ public class Paging {
     }
 
     private static void iterateAllMessages(GraphServiceClient<Request> graphClient) {
+        // <PagingSnippet>
         MessageCollectionPage messagesPage = graphClient.me().messages()
             .buildRequest(
                 new HeaderOption("Prefer", "outlook.body-content-type=\"text\""))
@@ -41,5 +42,6 @@ public class Paging {
                     .get();
             }
         }
+        // </PagingSnippet>
     }
 }
