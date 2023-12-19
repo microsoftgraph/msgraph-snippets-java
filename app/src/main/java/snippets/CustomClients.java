@@ -9,6 +9,12 @@ import java.net.Proxy;
 import java.util.List;
 
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.http.HttpClient;
+import com.azure.core.http.ProxyOptions;
+import com.azure.core.http.ProxyOptions.Type;
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
+import com.azure.identity.ClientSecretCredential;
+import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
 import com.microsoft.graph.httpcore.ChaosHttpHandler;
 import com.microsoft.graph.httpcore.HttpClients;
@@ -48,22 +54,40 @@ public class CustomClients {
         return graphClient;
     }
 
-    public static GraphServiceClient<Request> createWithProxy(TokenCredential credential,
-        List<String> scopes) throws Exception {
-        if (null == credential || scopes == null) {
+    public static GraphServiceClient<Request> createWithProxy(List<String> scopes) throws Exception {
+        if (scopes == null) {
             throw new Exception("Parameters are not optional");
         }
         // <ProxySnippet>
-        // tokenCredential is one of the credential classes from azure-identity
-        // scopes is a list of permission scope strings
-        final TokenCredentialAuthProvider authProvider = new TokenCredentialAuthProvider(
-            scopes, credential);
-
         final String proxyHost = "localhost";
         final int proxyPort = 8888;
         final InetSocketAddress proxyAddress = new InetSocketAddress(proxyHost,
             proxyPort);
 
+        // Setup proxy for the token credential from azure-identity
+        // From the com.azure.core.http.* packages
+        final ProxyOptions myOptions = new ProxyOptions(Type.HTTP, proxyAddress);
+        // If the proxy requires authentication, use setCredentials
+        myOptions.setCredentials("username", "password");
+        final HttpClient myClient = new NettyAsyncHttpClientBuilder().proxy(myOptions)
+            .build();
+
+        final ClientSecretCredential credential = new ClientSecretCredentialBuilder()
+            .clientId("YOUR_CLIENT_ID")
+            .tenantId("YOUR_TENANT_ID")
+            .clientSecret("YOUR_CLIENT_SECRET")
+            .httpClient(myClient)
+            .build();
+
+        if (credential == null) {
+            throw new Exception("Could not create credential");
+        }
+
+        // scopes is a list of permission scope strings
+        final TokenCredentialAuthProvider authProvider = new TokenCredentialAuthProvider(
+            scopes, credential);
+
+        // Setup proxy for the Graph client
         final Proxy proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);
 
         // This object is only needed if the proxy requires authentication
