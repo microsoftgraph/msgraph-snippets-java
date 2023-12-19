@@ -66,17 +66,17 @@ public class CustomClients {
 
         // Setup proxy for the token credential from azure-identity
         // From the com.azure.core.http.* packages
-        final ProxyOptions myOptions = new ProxyOptions(Type.HTTP, proxyAddress);
+        final ProxyOptions options = new ProxyOptions(Type.HTTP, proxyAddress);
         // If the proxy requires authentication, use setCredentials
-        myOptions.setCredentials("username", "password");
-        final HttpClient myClient = new NettyAsyncHttpClientBuilder().proxy(myOptions)
+        options.setCredentials("username", "password");
+        final HttpClient authClient = new NettyAsyncHttpClientBuilder().proxy(options)
             .build();
 
         final ClientSecretCredential credential = new ClientSecretCredentialBuilder()
             .clientId("YOUR_CLIENT_ID")
             .tenantId("YOUR_TENANT_ID")
             .clientSecret("YOUR_CLIENT_SECRET")
-            .httpClient(myClient)
+            .httpClient(authClient)
             .build();
 
         if (credential == null) {
