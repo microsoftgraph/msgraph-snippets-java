@@ -11,13 +11,12 @@ import java.util.function.Consumer;
 import com.azure.identity.DeviceCodeCredential;
 import com.azure.identity.DeviceCodeCredentialBuilder;
 import com.azure.identity.DeviceCodeInfo;
-import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
-import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 
 import okhttp3.Request;
 
 public class GraphHelper {
-    public static GraphServiceClient<Request> getGraphClientForUser(Properties properties,
+    public static GraphServiceClient getGraphClientForUser(Properties properties,
         Consumer<DeviceCodeInfo> challenge) throws Exception {
 
         // Get required properties
@@ -37,10 +36,6 @@ public class GraphHelper {
         if (null == credential) {
             throw new Exception("Could not create required credential.");
         }
-
-        final TokenCredentialAuthProvider authProvider = new TokenCredentialAuthProvider(
-            graphUserScopes, credential);
-
-        return GraphServiceClient.builder().authenticationProvider(authProvider).buildClient();
+        return new GraphServiceClient(credential, graphUserScopes.toArray(new String[0]));
     }
 }

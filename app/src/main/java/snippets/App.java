@@ -10,7 +10,7 @@ import java.util.Properties;
 import java.util.Scanner;
 
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
 
 import okhttp3.Request;
 
@@ -47,7 +47,7 @@ public class App {
             return;
         }
 
-        GraphServiceClient<Request> userClient;
+        GraphServiceClient userClient;
         try {
             userClient = GraphHelper.getGraphClientForUser(properties,
                 challenge -> System.out.println(challenge.getMessage()));
@@ -58,8 +58,8 @@ public class App {
             return;
         }
 
-        final User user = userClient.me().buildRequest().get();
-        System.out.println("Hello " + Objects.requireNonNull(user).displayName + "!");
+        final User user = userClient.me().get();
+        System.out.println("Hello " + Objects.requireNonNull(user).getDisplayName() + "!");
 
         final String largeFilePath = properties.getProperty("app.largeFilePath");
 
