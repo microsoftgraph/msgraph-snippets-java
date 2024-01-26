@@ -3,6 +3,7 @@
 
 package snippets;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -12,133 +13,125 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.gson.JsonElement;
-import com.microsoft.graph.content.BatchRequestContent;
-import com.microsoft.graph.content.BatchResponseContent;
-import com.microsoft.graph.content.BatchResponseStep;
-import com.microsoft.graph.http.HttpMethod;
+import com.microsoft.graph.core.content.BatchResponseContent;
+import com.microsoft.graph.core.models.BatchRequestStep;
 import com.microsoft.graph.models.DateTimeTimeZone;
 import com.microsoft.graph.models.Event;
+import com.microsoft.graph.models.EventCollectionResponse;
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.options.Option;
-import com.microsoft.graph.options.QueryOption;
-import com.microsoft.graph.requests.EventCollectionResponse;
-import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.core.content.BatchRequestContent;
 
+import com.microsoft.kiota.RequestInformation;
 import okhttp3.Request;
+import okhttp3.Response;
 
 public class BatchRequests {
-    public static void runSamples(GraphServiceClient<Request> graphClient) {
+    public static void runSamples(GraphServiceClient graphClient) throws IOException {
         simpleBatch(graphClient);
         dependentBatch(graphClient);
     }
 
-    private static void simpleBatch(GraphServiceClient<Request> graphClient) {
+    private static void simpleBatch(GraphServiceClient graphClient) throws IOException {
         // <SimpleBatchSnippet>
         // Create the batch request content with the steps
-        final BatchRequestContent batchRequestContent = new BatchRequestContent();
+        final BatchRequestContent batchRequestContent = new BatchRequestContent(graphClient);
 
-        // Use the Graph client to generate the request for GET /me
-        final String meGetId = batchRequestContent
-            .addBatchRequestStep(graphClient.me().buildRequest());
+        // Use the Graph client to generate the requestInformation object for GET /me
+        final RequestInformation meRequestInformation = graphClient.me().toGetRequestInformation();
 
         final ZoneOffset localTimeZone = OffsetDateTime.now().getOffset();
         final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(),
             LocalTime.MIDNIGHT, localTimeZone);
         final OffsetDateTime tomorrow = today.plusDays(1);
 
-        // Use the Graph client to generate the request URL for
+        // Use the Graph client to generate the requestInformation for
         // GET /me/calendarView?startDateTime="start"&endDateTime="end"
-        final List<Option> calendarViewOptions = Arrays.asList(
-            new QueryOption("startDateTime", today.toString()),
-            new QueryOption("endDateTime", tomorrow.toString()));
-        final String calendarViewRequestStepId = batchRequestContent.addBatchRequestStep(
-            graphClient.me().calendarView().buildRequest(calendarViewOptions));
+        RequestInformation calenderViewRequestInformation = graphClient.me().calendarView().toGetRequestInformation( requestConfiguration -> {
+            requestConfiguration.queryParameters.startDateTime = today.toString();
+            requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
+        });
+
+        // Add the requestInformation objects to the batch request content
+        final String meRequestId = batchRequestContent.addBatchRequestStep(meRequestInformation);
+        final String calendarViewRequestStepId = batchRequestContent.addBatchRequestStep(calenderViewRequestInformation);
 
         // Send the batch request content to the /$batch endpoint
         final BatchResponseContent batchResponseContent = Objects
-            .requireNonNull(graphClient.batch().buildRequest().post(batchRequestContent));
+            .requireNonNull(graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
 
         // Get the user response using the id assigned to the request
-        final BatchResponseStep<JsonElement> userResponse = Objects
-            .requireNonNull(batchResponseContent.getResponseById(meGetId));
-        final User user = Objects
-            .requireNonNull(userResponse.getDeserializedBody(User.class));
-        System.out.println(String.format("Hello %s!", user.displayName));
+        final User me = batchResponseContent.getResponseById(meRequestId, User::createFromDiscriminatorValue);
+        System.out.println(String.format("Hello %s!", me.getDisplayName()));
 
         // Get the calendar view response by id
-        final BatchResponseStep<JsonElement> eventsResponse = Objects.requireNonNull(
-            batchResponseContent.getResponseById(calendarViewRequestStepId));
-        final EventCollectionResponse events = Objects.requireNonNull(
-            eventsResponse.getDeserializedBody(EventCollectionResponse.class));
+        final EventCollectionResponse eventsResponse = Objects.requireNonNull(
+            batchResponseContent.getResponseById(calendarViewRequestStepId, EventCollectionResponse::createFromDiscriminatorValue));
         System.out.println(String.format("You have %d events on your calendar today",
-            Objects.requireNonNull(events.value).size()));
+            Objects.requireNonNull(eventsResponse.getValue()).size()));
         // </SimpleBatchSnippet>
     }
 
-    private static void dependentBatch(GraphServiceClient<Request> graphClient) {
+    private static void dependentBatch(GraphServiceClient graphClient) throws IOException {
         // <DependentBatchSnippet>
         // Create the batch request content with the steps
-        final BatchRequestContent batchRequestContent = new BatchRequestContent();
+        final BatchRequestContent batchRequestContent = new BatchRequestContent(graphClient);
 
         final ZoneOffset localTimeZone = OffsetDateTime.now().getOffset();
-        final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(),
-            LocalTime.MIDNIGHT, localTimeZone);
+        final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT, localTimeZone);
         final OffsetDateTime tomorrow = today.plusDays(1);
 
         // Create a new event for today at 5:00 PM
         final Event newEvent = new Event();
-        newEvent.subject = "File end-of-day report";
-        newEvent.start = new DateTimeTimeZone();
+        newEvent.setSubject("File end-of-day report");
         // 5:00 PM
         final DateTimeTimeZone start = new DateTimeTimeZone();
-        start.dateTime = today.plusHours(17)
-            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        start.timeZone = ZoneOffset.systemDefault().getId();
-        newEvent.start = start;
-        newEvent.end = new DateTimeTimeZone();
+        start.setDateTime(today.plusHours(17).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        start.setTimeZone(ZoneOffset.systemDefault().getId());
+        newEvent.setStart(start);
         // 5:30 PM
         final DateTimeTimeZone end = new DateTimeTimeZone();
-        end.dateTime = today.plusHours(17).plusMinutes(30)
-            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        end.timeZone = ZoneOffset.systemDefault().getId();
-        newEvent.end = end;
+        end.setDateTime(today.plusHours(17).plusMinutes(30).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        end.setTimeZone(ZoneOffset.systemDefault().getId());
+        newEvent.setEnd(end);
 
-        // Use the Graph client to generate the request URL for POST /me/events
-        final String addEventRequestId = batchRequestContent.addBatchRequestStep(
-            graphClient.me().events().buildRequest(), HttpMethod.POST, newEvent);
+        // Use the Graph client to add the requestInformation for POST /me/events
+        RequestInformation postEventRequestInformation = graphClient.me().events().toPostRequestInformation(newEvent);
+        // Get the id assigned to the request
+        String postEventRequestId = batchRequestContent.addBatchRequestStep(postEventRequestInformation);
 
-        // Use the Graph client to generate the request URL for
+        // Use the Graph client to generate the requestInformation
         // GET /me/calendarView?startDateTime="start"&endDateTime="end"
-        final List<Option> calendarViewOptions = Arrays.asList(
-            new QueryOption("startDateTime", today.toString()),
-            new QueryOption("endDateTime", tomorrow.toString()));
+        final RequestInformation calendarViewRequestInformation = graphClient.me().calendarView().toGetRequestInformation(requestConfiguration -> {
+            requestConfiguration.queryParameters.startDateTime = today.toString();
+            requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
+        });
+        // Convert the requestInformation to a native OkHttp request
+        // This is required as BatchRequestStep requires a native request
+        Request calendarViewRequest = graphClient.getRequestAdapter().convertToNativeRequest(calendarViewRequestInformation);
 
-        // Add the second request, passing addEventRequestId in the
-        // 'dependsOnRequestsIds'
-        final String calendarViewRequestStepId = batchRequestContent.addBatchRequestStep(
-            graphClient.me().calendarView().buildRequest(calendarViewOptions),
-            HttpMethod.GET, null, addEventRequestId);
+        // Manually create a BatchRequestStep and set the request id to "2"
+        BatchRequestStep calendarViewRequestStep = new BatchRequestStep("2", calendarViewRequest);
+        // Set the dependsOnId to 'meRequestId'
+        calendarViewRequestStep.addDependsOnId(postEventRequestId);
+        // Add the second request to the BatchRequestContent object
+        batchRequestContent.addBatchRequestStep(calendarViewRequestStep);
 
         // Send the batch request content to the /$batch endpoint
         final BatchResponseContent batchResponseContent = Objects
-            .requireNonNull(graphClient.batch().buildRequest().post(batchRequestContent));
+            .requireNonNull(graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
 
         // Get the user response using the id assigned to the request
-        final BatchResponseStep<JsonElement> addEventResponse = Objects
-            .requireNonNull(batchResponseContent.getResponseById(addEventRequestId));
-        final Event event = Objects.requireNonNull(addEventResponse)
-            .getDeserializedBody(Event.class);
+        final Event postedEvent = Objects
+            .requireNonNull(batchResponseContent.getResponseById(postEventRequestId, Event::createFromDiscriminatorValue));
         System.out.println(String.format("New event created with ID: %s",
-            Objects.requireNonNull(event).id));
+            Objects.requireNonNull(postedEvent.getId())));
 
         // Get the calendar view response by id
-        final BatchResponseStep<JsonElement> eventsResponse = Objects.requireNonNull(
-            batchResponseContent.getResponseById(calendarViewRequestStepId));
-        final EventCollectionResponse events = Objects.requireNonNull(
-            eventsResponse.getDeserializedBody(EventCollectionResponse.class));
+        final EventCollectionResponse eventsResponse = Objects.requireNonNull(
+            batchResponseContent.getResponseById("2", EventCollectionResponse::createFromDiscriminatorValue));
         System.out.println(String.format("You have %d events on your calendar today",
-            Objects.requireNonNull(events.value).size()));
+            Objects.requireNonNull(eventsResponse.getValue().size())));
         // </DependentBatchSnippet>
     }
 }
