@@ -3,7 +3,6 @@
 
 package snippets;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,8 +11,6 @@ import com.microsoft.graph.core.tasks.PageIterator;
 import com.microsoft.graph.models.Message;
 import com.microsoft.graph.models.MessageCollectionResponse;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-
-import okhttp3.Request;
 
 public class Paging {
     public static void runAllSamples(GraphServiceClient graphClient) throws ReflectiveOperationException {

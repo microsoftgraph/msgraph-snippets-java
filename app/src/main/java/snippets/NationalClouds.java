@@ -3,13 +3,9 @@
 
 package snippets;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.azure.identity.AzureAuthorityHosts;
 import com.azure.identity.InteractiveBrowserCredential;
 import com.azure.identity.InteractiveBrowserCredentialBuilder;
-import com.microsoft.graph.core.authentication.AzureIdentityAuthenticationProvider;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 
 import okhttp3.Request;

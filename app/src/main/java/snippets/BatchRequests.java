@@ -9,8 +9,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import com.microsoft.graph.core.content.BatchResponseContent;
@@ -24,7 +22,6 @@ import com.microsoft.graph.core.content.BatchRequestContent;
 
 import com.microsoft.kiota.RequestInformation;
 import okhttp3.Request;
-import okhttp3.Response;
 
 public class BatchRequests {
     public static void runSamples(GraphServiceClient graphClient) throws IOException {

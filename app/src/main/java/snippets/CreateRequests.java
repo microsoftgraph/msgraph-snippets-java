@@ -8,8 +8,6 @@ import java.util.Objects;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 
-import okhttp3.Request;
-
 public class CreateRequests {
     public static void runSamples(GraphServiceClient graphClient) {
         // Create a new message
