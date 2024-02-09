@@ -15,8 +15,8 @@ import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.core.authentication.AzureIdentityAuthenticationProvider;
+import com.microsoft.graph.core.requests.GraphClientFactory;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-import com.microsoft.kiota.http.KiotaClientFactory;
 import com.microsoft.kiota.http.middleware.ChaosHandler;
 
 import okhttp3.Authenticator;
@@ -35,12 +35,13 @@ public class CustomClients {
         // <ChaosHandlerSnippet>
         // tokenCredential is one of the credential classes from azure-identity
         // scopes is a list of permission scope strings
-        final AzureIdentityAuthenticationProvider authProvider = new AzureIdentityAuthenticationProvider(
-            credential, allowedHosts, scopes);
+        final AzureIdentityAuthenticationProvider authProvider =
+            new AzureIdentityAuthenticationProvider(credential, allowedHosts, scopes);
 
         final ChaosHandler chaosHandler = new ChaosHandler();
 
-        final OkHttpClient httpClient = KiotaClientFactory.create().addInterceptor(chaosHandler).build();
+        final OkHttpClient httpClient = GraphClientFactory.create()
+            .addInterceptor(chaosHandler).build();
 
         if (null == httpClient) {
             throw new Exception("Could not create HTTP client.");
@@ -82,8 +83,8 @@ public class CustomClients {
         }
 
         // scopes is a list of permission scope strings
-        final AzureIdentityAuthenticationProvider authProvider = new AzureIdentityAuthenticationProvider(
-            credential, allowedHosts, scopes);
+        final AzureIdentityAuthenticationProvider authProvider =
+            new AzureIdentityAuthenticationProvider(credential, allowedHosts, scopes);
 
         // Setup proxy for the Graph client
         final Proxy proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);
@@ -100,7 +101,7 @@ public class CustomClients {
         };
 
         // Omit proxyAuthenticator if no authentication required
-        final OkHttpClient httpClient = KiotaClientFactory.create().proxy(proxy)
+        final OkHttpClient httpClient = GraphClientFactory.create().proxy(proxy)
             .proxyAuthenticator(proxyAuthenticator).build();
         if (null == httpClient) {
             throw new Exception("Could not create HTTP client.");
