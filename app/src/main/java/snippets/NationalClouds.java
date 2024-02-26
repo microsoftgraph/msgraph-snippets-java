@@ -8,8 +8,6 @@ import com.azure.identity.InteractiveBrowserCredential;
 import com.azure.identity.InteractiveBrowserCredentialBuilder;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
 
-import okhttp3.Request;
-
 public class NationalClouds {
     public static GraphServiceClient createClientForUSGov() throws Exception {
         // <NationalCloudSnippet>
