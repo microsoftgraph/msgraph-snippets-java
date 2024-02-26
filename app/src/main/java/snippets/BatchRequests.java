@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 import com.microsoft.graph.core.content.BatchResponseContent;
-import com.microsoft.graph.core.models.BatchRequestStep;
 import com.microsoft.graph.models.DateTimeTimeZone;
 import com.microsoft.graph.models.Event;
 import com.microsoft.graph.models.EventCollectionResponse;
@@ -21,7 +20,6 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.core.content.BatchRequestContent;
 
 import com.microsoft.kiota.RequestInformation;
-import okhttp3.Request;
 
 public class BatchRequests {
     public static void runSamples(GraphServiceClient graphClient) throws IOException {
@@ -32,10 +30,12 @@ public class BatchRequests {
     private static void simpleBatch(GraphServiceClient graphClient) throws IOException {
         // <SimpleBatchSnippet>
         // Create the batch request content with the steps
-        final BatchRequestContent batchRequestContent = new BatchRequestContent(graphClient);
+        final BatchRequestContent batchRequestContent = new BatchRequestContent(
+            graphClient);
 
         // Use the Graph client to generate the requestInformation object for GET /me
-        final RequestInformation meRequestInformation = graphClient.me().toGetRequestInformation();
+        final RequestInformation meRequestInformation = graphClient.me()
+            .toGetRequestInformation();
 
         final ZoneOffset localTimeZone = OffsetDateTime.now().getOffset();
         final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(),
@@ -44,38 +44,46 @@ public class BatchRequests {
 
         // Use the Graph client to generate the requestInformation for
         // GET /me/calendarView?startDateTime="start"&endDateTime="end"
-        RequestInformation calenderViewRequestInformation = graphClient.me().calendarView().toGetRequestInformation( requestConfiguration -> {
-            requestConfiguration.queryParameters.startDateTime = today.toString();
-            requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
-        });
+        RequestInformation calenderViewRequestInformation = graphClient.me()
+            .calendarView().toGetRequestInformation(requestConfiguration -> {
+                requestConfiguration.queryParameters.startDateTime = today.toString();
+                requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
+            });
 
         // Add the requestInformation objects to the batch request content
-        final String meRequestId = batchRequestContent.addBatchRequestStep(meRequestInformation);
-        final String calendarViewRequestStepId = batchRequestContent.addBatchRequestStep(calenderViewRequestInformation);
+        final String meRequestId = batchRequestContent
+            .addBatchRequestStep(meRequestInformation);
+        final String calendarViewRequestStepId = batchRequestContent
+            .addBatchRequestStep(calenderViewRequestInformation);
 
         // Send the batch request content to the /$batch endpoint
-        final BatchResponseContent batchResponseContent = Objects
-            .requireNonNull(graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
+        final BatchResponseContent batchResponseContent = Objects.requireNonNull(
+            graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
 
         // Get the user response using the id assigned to the request
-        final User me = batchResponseContent.getResponseById(meRequestId, User::createFromDiscriminatorValue);
+        final User me = batchResponseContent.getResponseById(meRequestId,
+            User::createFromDiscriminatorValue);
         System.out.println(String.format("Hello %s!", me.getDisplayName()));
 
         // Get the calendar view response by id
         final EventCollectionResponse eventsResponse = Objects.requireNonNull(
-            batchResponseContent.getResponseById(calendarViewRequestStepId, EventCollectionResponse::createFromDiscriminatorValue));
+            batchResponseContent.getResponseById(calendarViewRequestStepId,
+                EventCollectionResponse::createFromDiscriminatorValue));
         System.out.println(String.format("You have %d events on your calendar today",
             Objects.requireNonNull(eventsResponse.getValue()).size()));
         // </SimpleBatchSnippet>
     }
 
-    private static void dependentBatch(GraphServiceClient graphClient) throws IOException {
+    private static void dependentBatch(GraphServiceClient graphClient)
+        throws IOException {
         // <DependentBatchSnippet>
         // Create the batch request content with the steps
-        final BatchRequestContent batchRequestContent = new BatchRequestContent(graphClient);
+        final BatchRequestContent batchRequestContent = new BatchRequestContent(
+            graphClient);
 
         final ZoneOffset localTimeZone = OffsetDateTime.now().getOffset();
-        final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(), LocalTime.MIDNIGHT, localTimeZone);
+        final OffsetDateTime today = OffsetDateTime.of(LocalDate.now(),
+            LocalTime.MIDNIGHT, localTimeZone);
         final OffsetDateTime tomorrow = today.plusDays(1);
 
         // Create a new event for today at 5:00 PM
@@ -83,50 +91,53 @@ public class BatchRequests {
         newEvent.setSubject("File end-of-day report");
         // 5:00 PM
         final DateTimeTimeZone start = new DateTimeTimeZone();
-        start.setDateTime(today.plusHours(17).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        start.setDateTime(
+            today.plusHours(17).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         start.setTimeZone(ZoneOffset.systemDefault().getId());
         newEvent.setStart(start);
         // 5:30 PM
         final DateTimeTimeZone end = new DateTimeTimeZone();
-        end.setDateTime(today.plusHours(17).plusMinutes(30).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        end.setDateTime(today.plusHours(17).plusMinutes(30)
+            .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         end.setTimeZone(ZoneOffset.systemDefault().getId());
         newEvent.setEnd(end);
 
         // Use the Graph client to add the requestInformation for POST /me/events
-        RequestInformation postEventRequestInformation = graphClient.me().events().toPostRequestInformation(newEvent);
+        RequestInformation postEventRequestInformation = graphClient.me().events()
+            .toPostRequestInformation(newEvent);
+
         // Get the id assigned to the request
-        String postEventRequestId = batchRequestContent.addBatchRequestStep(postEventRequestInformation);
+        String postEventRequestId = batchRequestContent
+            .addBatchRequestStep(postEventRequestInformation);
 
         // Use the Graph client to generate the requestInformation
         // GET /me/calendarView?startDateTime="start"&endDateTime="end"
-        final RequestInformation calendarViewRequestInformation = graphClient.me().calendarView().toGetRequestInformation(requestConfiguration -> {
-            requestConfiguration.queryParameters.startDateTime = today.toString();
-            requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
-        });
-        // Convert the requestInformation to a native OkHttp request
-        // This is required as BatchRequestStep requires a native request
-        Request calendarViewRequest = graphClient.getRequestAdapter().convertToNativeRequest(calendarViewRequestInformation);
+        final RequestInformation calendarViewRequestInformation = graphClient.me()
+            .calendarView().toGetRequestInformation(requestConfiguration -> {
+                requestConfiguration.queryParameters.startDateTime = today.toString();
+                requestConfiguration.queryParameters.endDateTime = tomorrow.toString();
+            });
 
-        // Manually create a BatchRequestStep and set the request id to "2"
-        BatchRequestStep calendarViewRequestStep = new BatchRequestStep("2", calendarViewRequest);
-        // Set the dependsOnId to 'meRequestId'
-        calendarViewRequestStep.addDependsOnId(postEventRequestId);
-        // Add the second request to the BatchRequestContent object
-        batchRequestContent.addBatchRequestStep(calendarViewRequestStep);
+        final String calendarViewRequestId = batchRequestContent
+            .addBatchRequestStep(calendarViewRequestInformation);
+        // Set the dependsOnId to 'postEventRequestId'
+        batchRequestContent.getBatchRequestSteps().get(calendarViewRequestId)
+            .addDependsOnId(postEventRequestId);
 
         // Send the batch request content to the /$batch endpoint
-        final BatchResponseContent batchResponseContent = Objects
-            .requireNonNull(graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
+        final BatchResponseContent batchResponseContent = Objects.requireNonNull(
+            graphClient.getBatchRequestBuilder().post(batchRequestContent, null));
 
-        // Get the user response using the id assigned to the request
-        final Event postedEvent = Objects
-            .requireNonNull(batchResponseContent.getResponseById(postEventRequestId, Event::createFromDiscriminatorValue));
+        // Get the event response using the id assigned to the request
+        final Event postedEvent = batchResponseContent.getResponseById(postEventRequestId,
+            Event::createFromDiscriminatorValue);
         System.out.println(String.format("New event created with ID: %s",
             Objects.requireNonNull(postedEvent.getId())));
 
         // Get the calendar view response by id
-        final EventCollectionResponse eventsResponse = Objects.requireNonNull(
-            batchResponseContent.getResponseById("2", EventCollectionResponse::createFromDiscriminatorValue));
+        final EventCollectionResponse eventsResponse = Objects
+            .requireNonNull(batchResponseContent.getResponseById(calendarViewRequestId,
+                EventCollectionResponse::createFromDiscriminatorValue));
         System.out.println(String.format("You have %d events on your calendar today",
             Objects.requireNonNull(eventsResponse.getValue().size())));
         // </DependentBatchSnippet>
