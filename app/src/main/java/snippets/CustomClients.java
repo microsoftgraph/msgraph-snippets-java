@@ -6,7 +6,6 @@ package snippets;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.List;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.HttpClient;
@@ -15,10 +14,10 @@ import com.azure.core.http.ProxyOptions.Type;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import com.microsoft.graph.authentication.TokenCredentialAuthProvider;
-import com.microsoft.graph.httpcore.ChaosHttpHandler;
-import com.microsoft.graph.httpcore.HttpClients;
-import com.microsoft.graph.requests.GraphServiceClient;
+import com.microsoft.graph.core.authentication.AzureIdentityAuthenticationProvider;
+import com.microsoft.graph.core.requests.GraphClientFactory;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.kiota.http.middleware.ChaosHandler;
 
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
@@ -28,33 +27,33 @@ import okhttp3.Response;
 import okhttp3.Route;
 
 public class CustomClients {
-    public static GraphServiceClient<Request> createWithChaosHandler(
-        TokenCredential credential, List<String> scopes) throws Exception {
+    public static GraphServiceClient createWithChaosHandler(
+        TokenCredential credential, String[] allowedHosts, String[] scopes) throws Exception {
         if (null == credential || scopes == null) {
             throw new Exception("Parameters are not optional");
         }
         // <ChaosHandlerSnippet>
         // tokenCredential is one of the credential classes from azure-identity
         // scopes is a list of permission scope strings
-        final TokenCredentialAuthProvider authProvider = new TokenCredentialAuthProvider(
-            scopes, credential);
+        final AzureIdentityAuthenticationProvider authProvider =
+            new AzureIdentityAuthenticationProvider(credential, allowedHosts, scopes);
 
-        final ChaosHttpHandler chaosHandler = new ChaosHttpHandler();
+        final ChaosHandler chaosHandler = new ChaosHandler();
 
-        final OkHttpClient httpClient = HttpClients.createDefault(authProvider)
-            .newBuilder().addInterceptor(chaosHandler).build();
+        final OkHttpClient httpClient = GraphClientFactory.create()
+            .addInterceptor(chaosHandler).build();
+
         if (null == httpClient) {
             throw new Exception("Could not create HTTP client.");
         }
 
-        final GraphServiceClient<Request> graphClient = GraphServiceClient.builder()
-            .httpClient(httpClient).buildClient();
+        final GraphServiceClient graphClient = new GraphServiceClient(authProvider, httpClient);
         // </ChaosHandlerSnippet>
 
         return graphClient;
     }
 
-    public static GraphServiceClient<Request> createWithProxy(List<String> scopes) throws Exception {
+    public static GraphServiceClient createWithProxy(String[] allowedHosts, String[] scopes) throws Exception {
         if (scopes == null) {
             throw new Exception("Parameters are not optional");
         }
@@ -84,8 +83,8 @@ public class CustomClients {
         }
 
         // scopes is a list of permission scope strings
-        final TokenCredentialAuthProvider authProvider = new TokenCredentialAuthProvider(
-            scopes, credential);
+        final AzureIdentityAuthenticationProvider authProvider =
+            new AzureIdentityAuthenticationProvider(credential, allowedHosts, scopes);
 
         // Setup proxy for the Graph client
         final Proxy proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);
@@ -102,14 +101,13 @@ public class CustomClients {
         };
 
         // Omit proxyAuthenticator if no authentication required
-        final OkHttpClient httpClient = HttpClients.createDefault(authProvider)
-            .newBuilder().proxy(proxy).proxyAuthenticator(proxyAuthenticator).build();
+        final OkHttpClient httpClient = GraphClientFactory.create().proxy(proxy)
+            .proxyAuthenticator(proxyAuthenticator).build();
         if (null == httpClient) {
             throw new Exception("Could not create HTTP client.");
         }
 
-        final GraphServiceClient<Request> graphClient = GraphServiceClient.builder()
-            .httpClient(httpClient).buildClient();
+        final GraphServiceClient graphClient = new GraphServiceClient(authProvider, httpClient);
         // </ProxySnippet>
 
         return graphClient;

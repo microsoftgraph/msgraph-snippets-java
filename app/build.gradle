@@ -23,13 +23,14 @@ dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:33.0.0-jre'
     implementation 'com.azure:azure-identity:1.11.2'
-    implementation 'com.microsoft.graph:microsoft-graph:5.80.0'
+    implementation 'com.microsoft.graph:microsoft-graph:6.3.0'
+    implementation 'com.microsoft.kiota:microsoft-kiota-http-okHttp:1.0.3'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

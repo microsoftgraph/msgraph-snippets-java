@@ -10,9 +10,9 @@ import java.util.Properties;
 import java.util.Scanner;
 
 import com.microsoft.graph.models.User;
-import com.microsoft.graph.requests.GraphServiceClient;
-
-import okhttp3.Request;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.graph.models.odataerrors.ODataError;
+import com.microsoft.kiota.ApiException;
 
 public class App {
     public static Properties getProperties() {
@@ -47,7 +47,7 @@ public class App {
             return;
         }
 
-        GraphServiceClient<Request> userClient;
+        GraphServiceClient userClient;
         try {
             userClient = GraphHelper.getGraphClientForUser(properties,
                 challenge -> System.out.println(challenge.getMessage()));
@@ -58,8 +58,8 @@ public class App {
             return;
         }
 
-        final User user = userClient.me().buildRequest().get();
-        System.out.println("Hello " + Objects.requireNonNull(user).displayName + "!");
+        final User user = userClient.me().get();
+        System.out.println("Hello " + Objects.requireNonNull(user).getDisplayName() + "!");
 
         final String largeFilePath = properties.getProperty("app.largeFilePath");
 
@@ -102,8 +102,18 @@ public class App {
                 default:
                     System.out.println("Invalid choice");
                 }
+            } catch (ODataError o) {
+                System.out.println(o.getError().getMessage());
+            } catch (ApiException a) {
+                System.out.println(a.getMessage());
+                System.out.println(a.getResponseStatusCode());
+                a.getResponseHeaders().forEach((name, values) -> {
+                    System.out.println(name + values);
+                });
+                a.printStackTrace();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         }
 
