@@ -49,18 +49,21 @@ public class LargeFileUpload {
         // Create an upload session
         // ItemPath does not need to be a path to an existing item
         String myDriveId = graphClient.me().drive().get().getId();
-        UploadSession uploadSession = graphClient.drives().byDriveId(myDriveId)
+        UploadSession uploadSession = graphClient.drives()
+                .byDriveId(myDriveId)
                 .items()
                 .byDriveItemId("root:/"+itemPath+":")
                 .createUploadSession()
                 .post(uploadSessionRequest);
 
         // Create the upload task
+        int maxSliceSize = 320 * 10;
         LargeFileUploadTask<DriveItem> largeFileUploadTask = new LargeFileUploadTask<>(
                 graphClient.getRequestAdapter(),
                 uploadSession,
                 fileStream,
                 streamSize,
+                maxSliceSize,
                 DriveItem::createFromDiscriminatorValue);
 
         int maxAttempts = 5;
