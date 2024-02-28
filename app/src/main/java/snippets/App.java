@@ -11,8 +11,8 @@ import java.util.Scanner;
 
 import com.microsoft.graph.models.User;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
-
-import okhttp3.Request;
+import com.microsoft.graph.models.odataerrors.ODataError;
+import com.microsoft.kiota.ApiException;
 
 public class App {
     public static Properties getProperties() {
@@ -102,8 +102,18 @@ public class App {
                 default:
                     System.out.println("Invalid choice");
                 }
+            } catch (ODataError o) {
+                System.out.println(o.getError().getMessage());
+            } catch (ApiException a) {
+                System.out.println(a.getMessage());
+                System.out.println(a.getResponseStatusCode());
+                a.getResponseHeaders().forEach((name, values) -> {
+                    System.out.println(name + values);
+                });
+                a.printStackTrace();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         }
 
