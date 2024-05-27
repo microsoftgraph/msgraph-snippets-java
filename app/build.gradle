@@ -24,7 +24,7 @@ dependencies {
     implementation 'com.google.guava:guava:33.2.0-jre'
     implementation 'com.azure:azure-identity:1.12.1'
     implementation 'com.microsoft.graph:microsoft-graph:6.10.0'
-    implementation 'com.microsoft.kiota:microsoft-kiota-http-okHttp:1.1.11'
+    implementation 'com.microsoft.kiota:microsoft-kiota-http-okHttp:1.1.12'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
